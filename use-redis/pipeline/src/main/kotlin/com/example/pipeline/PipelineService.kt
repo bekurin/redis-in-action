@@ -2,7 +2,6 @@ package com.example.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
@@ -13,27 +12,28 @@ class PipelineService(
     private val redisTemplate: RedisTemplate<String, String>,
     private val objectMapper: ObjectMapper,
 ) {
-    private val redisKey = "BOARDABLE_ROUTE"
+    private val redisKey1 = "BOARDABLE_ROUTE1"
+    private val redisKey2 = "BOARDABLE_ROUTE2"
     private val log = LoggerFactory.getLogger(PipelineService::class.java)
 
     @PostConstruct
     fun init() {
         val now = LocalDate.now()
-        val localDates = (1..10000L).map { dayToAdds ->
+        val localDates = (1..5L).map { dayToAdds ->
             now.plusDays(dayToAdds)
         }
 
-        val currentTimeMillisForWithPipeline = System.currentTimeMillis()
-        // 321ms 327ms 331ms 392ms 319ms
-        saveToRedisWithPipeline(localDates)
-        log.info("running with pipeline took {}ms", System.currentTimeMillis() - currentTimeMillisForWithPipeline)
-
-        redisTemplate.delete(redisKey)
-
+        redisTemplate.delete(redisKey2)
         val currentTimeMillisForWithoutPipeline = System.currentTimeMillis()
         // 2613ms 2448ms 2363ms 2448ms 2713ms
         saveToRedisWithoutPipeline(localDates)
         log.info("running without pipeline took {}ms", System.currentTimeMillis() - currentTimeMillisForWithoutPipeline)
+
+        redisTemplate.delete(redisKey1)
+        val currentTimeMillisForWithPipeline = System.currentTimeMillis()
+        // 321ms 327ms 331ms 392ms 319ms
+        saveToRedisWithPipeline(localDates)
+        log.info("running with pipeline took {}ms", System.currentTimeMillis() - currentTimeMillisForWithPipeline)
     }
 
     fun saveToRedisWithoutPipeline(localDates: List<LocalDate>): Int {
@@ -41,7 +41,7 @@ class PipelineService(
             val helloDto = HelloDto("$localDate", "hello$index")
             redisTemplate.opsForHash<String, String>()
                 .put(
-                    redisKey,
+                    redisKey2,
                     localDate.toString(),
                     objectMapper.writeValueAsString(helloDto)
                 )
@@ -55,7 +55,7 @@ class PipelineService(
                 val helloDto = HelloDto("$localDate", "hello$index")
                 connection.hashCommands()
                     .hSet(
-                        redisKey.toByteArray(),
+                        redisKey1.toByteArray(),
                         localDate.toString().toByteArray(),
                         objectMapper.writeValueAsBytes(helloDto)
                     )
@@ -67,6 +67,13 @@ class PipelineService(
 
     data class HelloDto(
         val createdAt: String,
-        val message: String
-    )
+        val message: String,
+        val massiveString: String
+    ) {
+        constructor(createdAt: String, message: String) : this(
+            createdAt = createdAt,
+            message = message,
+            massiveString = String(CharArray(1024 * 512))
+        )
+    }
 }
