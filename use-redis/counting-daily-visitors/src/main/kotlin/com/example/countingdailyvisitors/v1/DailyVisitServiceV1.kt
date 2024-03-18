@@ -1,7 +1,7 @@
 package com.example.countingdailyvisitors.v1
 
-import com.example.countingdailyvisitors.Constant.PAGE_VISIT_KEY
-import com.example.countingdailyvisitors.Constant.UNIQUE_VISIT_KEY
+import com.example.countingdailyvisitors.Constant.V1.PAGE_VISIT_KEY
+import com.example.countingdailyvisitors.Constant.V1.UNIQUE_VISIT_KEY
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 

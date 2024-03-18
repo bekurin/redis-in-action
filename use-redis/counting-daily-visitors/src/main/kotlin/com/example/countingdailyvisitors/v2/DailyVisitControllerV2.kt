@@ -1,4 +1,4 @@
-package com.example.countingdailyvisitors.v1
+package com.example.countingdailyvisitors.v2
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
